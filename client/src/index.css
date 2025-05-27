@@ -1,0 +1,214 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css");
+
+@import "tailwindcss";
+
+/* Base styles */
+body {
+  font-family: "Space Grotesk", "Montserrat", sans-serif;
+  background-color: #050510;
+  color: #ffffff;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Gradient text styles */
+.gradient-text {
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(to right, #ff6b81, #ff85a2, #a569bd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-text::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, #ff6b81, #ff85a2, #a569bd);
+}
+
+/* Animation classes */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes waveform {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-waveform {
+  animation: waveform 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce 1.3s infinite ease-in-out;
+}
+
+@keyframes neuron-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-neuron-pulse {
+  animation: neuron-pulse 3s infinite;
+}
+
+@keyframes synapse-flash {
+  0% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.1;
+  }
+}
+
+.animate-synapse-flash {
+  animation: synapse-flash 4s infinite;
+}
+
+@keyframes pulse-button {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 65, 65, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 65, 65, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 65, 65, 0);
+  }
+}
+
+.animate-pulse-button {
+  animation: pulse-button 1.5s infinite;
+}
+
+/* Component styles */
+.waveform-bar {
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.7)
+  );
+  animation: waveform 1.5s ease-in-out infinite;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  animation: bounce 1.3s infinite ease-in-out;
+}
+
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: white;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+.model-card {
+  width: 100%;
+  backdrop-filter: blur(10px);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.model-card:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+}
+
+.model-card.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.talk-button {
+  padding: 1rem;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.talk-button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.talk-button.listening {
+  animation: pulse-button 1.5s infinite;
+}

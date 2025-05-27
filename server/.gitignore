@@ -1,0 +1,6 @@
+# Environment variables and sensitive keys
+.env
+google-tts-key.json
+
+# Node modules
+node_modules/

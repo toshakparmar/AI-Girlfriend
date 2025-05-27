@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 const SimpleBackground = ({ activeModel }) => {
     const gradientColor = useMemo(() => {

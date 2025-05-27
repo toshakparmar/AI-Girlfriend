@@ -55,10 +55,10 @@ html {
 @keyframes waveform {
   0%,
   100% {
-    transform: scaleY(0.5);
+    height: 10px;
   }
   50% {
-    transform: scaleY(1);
+    height: 30px;
   }
 }
 
@@ -135,17 +135,50 @@ html {
   animation: pulse-button 1.5s infinite;
 }
 
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Add angry blink animation for the angry typing cursor */
+@keyframes angryBlink {
+  0%,
+  100% {
+    opacity: 1;
+    height: 1.2rem;
+  }
+  50% {
+    opacity: 0.5;
+    height: 1rem;
+  }
+}
+
+/* Add intro animation styles */
+@keyframes introAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.intro-message {
+  animation: introAppear 0.5s ease-out;
+}
+
 /* Component styles */
 .waveform-bar {
   width: 4px;
-  height: 20px;
+  height: 25px;
   border-radius: 2px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.7)
-  );
-  animation: waveform 1.5s ease-in-out infinite;
+  background-color: rgba(255, 255, 255, 0.4);
+  animation: waveform 1.2s ease-in-out infinite;
 }
 
 .typing-indicator span {
@@ -159,7 +192,7 @@ html {
 .typing-cursor {
   display: inline-block;
   width: 2px;
-  height: 1em;
+  height: 1rem;
   background-color: white;
   margin-left: 2px;
   animation: blink 1s infinite;

@@ -82,7 +82,16 @@ app.post("/api/speak", async (req, res) => {
   try {
     const { text, voice, languageCode, speakingRate, pitch } = req.body;
 
-    // Define female voices for each personality
+    // Log the incoming request
+    console.log("TTS Request received:", {
+      voice,
+      languageCode,
+      textLength: text?.length || 0,
+      speakingRate,
+      pitch,
+    });
+
+    // Update the femaleVoices object
     const femaleVoices = {
       romantic: {
         name: "hi-IN-Neural2-A", // Hindi female (Priya)
@@ -96,13 +105,41 @@ app.post("/api/speak", async (req, res) => {
         name: "en-IN-Neural2-D", // Indian English female (Nisha)
         languageCode: "en-IN",
       },
-      rude: {
-        name: "en-IN-Neural2-B", // Indian English female (Kavya)
+      // Rename "rude" to "angry"
+      angry: {
+        name: "en-IN-Wavenet-A", // Female voice with better support for emphasis
         languageCode: "en-IN",
       },
       default: {
-        name: "en-IN-Neural2-A", // Default Indian English female
+        name: "en-IN-Neural2-A",
         languageCode: "en-IN",
+      },
+    };
+
+    // Update voice settings
+    const voiceSettings = {
+      romantic: {
+        speakingRate: 0.92,
+        pitch: 2.0,
+      },
+      techgeek: {
+        speakingRate: 1.0,
+        pitch: 0.0,
+      },
+      flirty: {
+        speakingRate: 0.95,
+        pitch: 4.0,
+      },
+      // Update voice settings for angry personality
+      angry: {
+        speakingRate: 1.25, // Faster to sound more aggressive
+        pitch: -4.0, // Lower pitch for more forceful tone
+        effectsProfileId: ["telephony-class-application"], // Adds a harsher effect
+        volumeGainDb: 3.0, // Slightly louder
+      },
+      default: {
+        speakingRate: 1.0,
+        pitch: 0.0,
       },
     };
 
@@ -114,13 +151,25 @@ app.post("/api/speak", async (req, res) => {
       voiceType = "techgeek";
     else if (voice?.includes("flirt") || voice === "en-IN-Neural2-D")
       voiceType = "flirty";
-    else if (voice?.includes("rude") || voice === "en-IN-Neural2-B")
-      voiceType = "rude";
+    else if (
+      voice?.includes("angry") ||
+      voice?.includes("rude") || // Keep supporting "rude" for backward compatibility
+      voice === "en-IN-Wavenet-A" ||
+      voice === "en-IN-Wavenet-B" ||
+      voice === "en-IN-Standard-B" ||
+      voice === "en-IN-Neural2-B"
+    )
+      voiceType = "angry";
 
     // Get the selected voice configuration
     const selectedVoice = voice || femaleVoices[voiceType].name;
     const selectedLanguageCode =
       languageCode || femaleVoices[voiceType].languageCode;
+
+    // Ensure pitch is within bounds (-20.0 to 20.0)
+    let adjustedPitch = pitch || 0.0;
+    if (adjustedPitch < -20.0) adjustedPitch = -20.0;
+    if (adjustedPitch > 20.0) adjustedPitch = 20.0;
 
     console.log(
       `Using Google TTS voice: ${selectedVoice} with language: ${selectedLanguageCode}`
@@ -136,19 +185,97 @@ app.post("/api/speak", async (req, res) => {
       },
       audioConfig: {
         audioEncoding: "MP3",
-        speakingRate: speakingRate || 1.0,
-        pitch: pitch || 0.0,
-        effectsProfileId: ["headphone-class-device"], // For better quality
+        speakingRate: voiceSettings[voiceType].speakingRate || 1.0,
+        pitch: voiceSettings[voiceType].pitch || 0.0,
+        effectsProfileId: ["headphone-class-device"], // Default for better quality
       },
     };
+    // Add volumeGainDb if specified
+    if (voiceSettings[voiceType].volumeGainDb) {
+      ttsRequest.audioConfig.volumeGainDb =
+        voiceSettings[voiceType].volumeGainDb;
+    }
+
+    // Add effects profile if specified
+    if (voiceSettings[voiceType].effectsProfileId) {
+      ttsRequest.audioConfig.effectsProfileId =
+        voiceSettings[voiceType].effectsProfileId;
+    }
+
+    // Function to enhance text with SSML for the angry voice
+    function enhanceWithSSML(text, voiceType) {
+      // Only apply SSML to the angry voice
+      if (voiceType !== "angry") {
+        return text;
+      }
+
+      // Add SSML tags to make the angry voice more expressive
+      let ssml = "<speak>";
+
+      // Split text into sentences
+      const sentences = text.split(/(?<=[.!?])\s+/);
+
+      sentences.forEach((sentence, index) => {
+        // Detect if sentence is a question
+        const isQuestion = sentence.trim().endsWith("?");
+
+        // Detect if sentence is an exclamation
+        const isExclamation = sentence.trim().endsWith("!");
+
+        // Random emphasis patterns for angry voice
+        if (isExclamation) {
+          // Stronger emphasis for exclamations
+          ssml += `<prosody rate="fast" pitch="+2st" volume="loud">${sentence}</prosody> `;
+        } else if (isQuestion) {
+          // Annoyed questioning tone
+          ssml += `<prosody pitch="-1st">${sentence}</prosody> `;
+        } else {
+          // Random angry emphasis for normal sentences
+          const randomEmphasis = Math.floor(Math.random() * 3);
+
+          switch (randomEmphasis) {
+            case 0:
+              ssml += `<prosody rate="fast">${sentence}</prosody> `;
+              break;
+            case 1:
+              ssml += `<prosody pitch="-2st">${sentence}</prosody> `;
+              break;
+            default:
+              // Sometimes add a frustrated sigh before a sentence
+              if (index > 0 && Math.random() > 0.7) {
+                ssml += `<break time="300ms"/><say-as interpret-as="interjection">ugh</say-as> <break time="200ms"/> `;
+              }
+              ssml += `${sentence} `;
+          }
+        }
+      });
+
+      ssml += "</speak>";
+      return ssml;
+    }
+
+    let inputText = text;
+
+    // For angry voice, enhance with SSML
+    if (voiceType === "angry") {
+      inputText = enhanceWithSSML(text, voiceType);
+      ttsRequest.input = { ssml: inputText };
+    } else {
+      ttsRequest.input = { text: inputText };
+    }
 
     // Call Google Cloud TTS API
     const [response] = await ttsClient.synthesizeSpeech(ttsRequest);
 
     // Check if we received audio content
     if (!response.audioContent || response.audioContent.length < 100) {
+      console.error("Received invalid audio content from Google TTS");
       throw new Error("Received invalid audio content from Google TTS");
     }
+
+    console.log(
+      `Successfully synthesized ${response.audioContent.length} bytes of audio`
+    );
 
     // Return audio as binary response
     res.set("Content-Type", "audio/mpeg");

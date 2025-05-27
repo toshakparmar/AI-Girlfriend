@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 
 const ModelCard = ({ model, isActive, onClick, index, isFullView }) => {

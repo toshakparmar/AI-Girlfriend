@@ -47,10 +47,17 @@ export const sendMessageToGemini = async (text, personality) => {
       return getMockResponse(text, personality);
     }
 
+    // Add context about Indian English
+    const enhancedPersonality = `${personality} 
+    SPEAKING CONTEXT: The user may be speaking Indian English, so understand common Indian English phrases and expressions.`;
+
     const response = await fetch(`${API_BASE_URL}/gemini`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, personality }),
+      body: JSON.stringify({
+        text,
+        personality: enhancedPersonality,
+      }),
     });
 
     if (!response.ok) {
@@ -84,11 +91,18 @@ const voiceMapping = {
     speakingRate: 0.95,
     pitch: 4.0,
   },
+  // Update rude voice to sound more angry
   rude: {
-    voice: "en-IN-Neural2-B", // Indian English female neural voice (Kavya)
+    voice: "en-IN-Wavenet-B", // More stable voice for angry effect
     languageCode: "en-IN",
-    speakingRate: 1.05,
-    pitch: -2.0,
+    speakingRate: 1.2, // Faster to sound more impatient
+    pitch: -3.0, // Lower pitch for angry tone
+  },
+  default: {
+    voice: "en-IN-Neural2-A",
+    languageCode: "en-IN",
+    speakingRate: 1.0,
+    pitch: 0.0,
   },
 };
 
@@ -156,17 +170,46 @@ export const synthesizeSpeech = async (text, voiceType) => {
   }
 };
 
+// Enhanced stopSpeaking function
+
 // Stop any ongoing speech
 export const stopSpeaking = () => {
+  console.log("Stopping all speech...");
+
+  // Clear any active audio element
   const audio = document.getElementById("audio");
   if (audio) {
-    audio.pause();
-    audio.currentTime = 0;
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = "";
+      audio.removeAttribute("src");
+      audio.load();
+      console.log("Audio element cleared");
+    } catch (e) {
+      console.error("Error clearing audio element:", e);
+    }
   }
 
+  // Clear active audio URL
   if (activeAudio) {
-    URL.revokeObjectURL(activeAudio);
-    activeAudio = null;
+    try {
+      URL.revokeObjectURL(activeAudio);
+      activeAudio = null;
+      console.log("Active audio URL revoked");
+    } catch (e) {
+      console.error("Error revoking object URL:", e);
+    }
+  }
+
+  // Also stop any browser speech synthesis
+  if (window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+      console.log("Browser speech synthesis canceled");
+    } catch (e) {
+      console.error("Error canceling speech synthesis:", e);
+    }
   }
 };
 
